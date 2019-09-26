@@ -2,16 +2,19 @@ import cv2 as cv
 import face_recognition as fr
 from PIL import Image
 
-face_locations = []
-face_encodings = []
-face_names = []
-frame_number = 0
-
 danImage = fr.load_image_file("./faceDatabase/dan.jpg")
+
 danFace = fr.face_encodings(danImage)[0]
 
 haoImage = fr.load_image_file("./faceDatabase/hao.jpg")
+
 haoFace = fr.face_encodings(haoImage)[0]
+
+locations = []
+
+encodings = []
+
+faces = []
 
 savedFaces = [danFace, haoFace, ]
 
@@ -24,46 +27,51 @@ if not webcam.isOpened():
 else:
 
     while True:
-        ret, frame = webcam.read()
-        rgb_frame = frame[:, :, ::-1]
-        face_locations = fr.face_locations(rgb_frame)
-        face_encodings = fr.face_encodings(rgb_frame, face_locations)
-        face_names = []
+        r, f = webcam.read()
+        condensed = cv.resize(f, (0, 0), fx=0.25, fy=0.25)
+        RGB = condensed[:, :, ::-1]
+        locations = fr.face_locations(RGB)
+        encodings = fr.face_encodings(RGB, locations)
+        faces = []
 
-        for face_encoding in face_encodings:
-            faceMatch = fr.compare_faces(savedFaces, face_encoding)
-            name = ""
+        for e in encodings:
+            faceMatch = fr.compare_faces(savedFaces, e)
+            identity = ""
 
             if faceMatch[0]:
-                name = "Daniel"
-                face_names.append(name)
-                face_locations = fr.face_locations(rgb_frame)
+                identity = "Daniel"
+                faces.append(identity)
+                locations = fr.face_locations(RGB)
+                print("Daniel's face detected!")
 
             elif faceMatch[1]:
-                name = "friend"
-                face_names.append(name)
-                face_locations = fr.face_locations(rgb_frame)
+                identity = "friend"
+                faces.append(identity)
+                locations = fr.face_locations(RGB)
+                print("Friendly face detected!")
 
             else:
-                name = "unknown"
-                face_names.append(name)
-                face_locations = fr.face_locations(rgb_frame)
+                identity = "unknown"
+                faces.append(identity)
+                locations = fr.face_locations(RGB)
+                print("Unknown face detected!")
 
-        for (top, right, bottom, left), name in zip(face_locations, face_names):
-            if name is "unknown":
-                unknown_face = frame[top:bottom, left:right]
+        for (top, right, bottom, left), identity in zip(locations, faces):
+
+            if identity is "unknown":
+                unknown_face = RGB[top:bottom, left:right]
                 new_face = Image.fromarray(unknown_face)
                 new_face.save(f'./unknownFaces/detectedFace{top}.jpg')
-                cv.rectangle(frame, (left, top), (right, bottom), (255, 255, 255), 1)
-                font = cv.FONT_HERSHEY_DUPLEX
-                cv.putText(frame, name, (left + 10, bottom - 10), font, .5, (255, 255, 255), 1)
+                cv.rectangle(condensed, (left, top), (right, bottom), (255, 255, 255), 1)
+                f = cv.FONT_HERSHEY_COMPLEX
+                cv.putText(condensed, identity, (left + 10, bottom - 10), f, .5, (255, 255, 255), 1)
 
             else:
-                cv.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 1)
-                font = cv.FONT_HERSHEY_COMPLEX
-                cv.putText(frame, name, (left + 10, bottom - 10), font, .5, (0, 255, 0), 1)
-        cv.imshow('LIVE_FEED', frame)
-        cv.waitKey(1)
+                cv.rectangle(condensed, (left, top), (right, bottom), (0, 255, 0), 1)
+                f = cv.FONT_HERSHEY_COMPLEX
+                cv.putText(condensed, identity, (left + 10, bottom - 10), f, .5, (0, 255, 0), 1)
+        cv.imshow('LIVE_FEED', condensed)
+        cv.waitKey(60)
 
 webcam.release()
 cv.destroyAllWindows()
