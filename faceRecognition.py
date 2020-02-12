@@ -6,17 +6,13 @@ danImage = fr.load_image_file("./faceDatabase/dan.jpg")
 
 danFace = fr.face_encodings(danImage)[0]
 
-haoImage = fr.load_image_file("./faceDatabase/hao.jpg")
-
-haoFace = fr.face_encodings(haoImage)[0]
-
 locations = []
 
 encodings = []
 
 faces = []
 
-savedFaces = [danFace, haoFace, ]
+savedFaces = [danFace]
 
 webcam = cv.VideoCapture(0)
 
